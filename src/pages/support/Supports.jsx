@@ -23,13 +23,13 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-hot-toast";
 import { BsReply } from "react-icons/bs";
 import Chat from "./chat";
-import { getAllComplaints } from "@/services/adminService";
+import { getAllComplaints } from "@/services/adminService"; // نستخدم نفس الدالة بس نعدلها في الـ service
 
 const Supports = () => {
   const [open, setOpen] = useState(false);
   const [selectedComplaint, setSelectedComplaint] = useState(null);
   const [selectedRows, setSelectedRows] = useState([]);
-  const [searchValue, setSearch] = useState("");
+  const [searchValue, setSearchValue] = useState("");
 
   const { t } = useTranslation();
 
@@ -43,12 +43,17 @@ const Supports = () => {
     const fetchComplaints = async () => {
       try {
         setLoading(true);
-        const res = await getAllComplaints();
-        setComplaints(res.data || res || []);
+        setError(null);
+
+        const res = await getAllComplaints(); // دلوقتي هيجيب من /admin/complaints
+        const complaintsData = res.data?.data || res.data || [];
+
+        setComplaints(complaintsData);
       } catch (err) {
         console.error("Failed to load complaints:", err);
         setError(t("failedToLoad") || "Failed to load complaints");
         toast.error(t("failedToLoad") || "Failed to load complaints");
+        setComplaints([]);
       } finally {
         setLoading(false);
       }
@@ -69,7 +74,7 @@ const Supports = () => {
     if (selectedRows.length === filteredComplaints.length) {
       setSelectedRows([]);
     } else {
-      setSelectedRows(filteredComplaints.map((c) => c._id || c.id));
+      setSelectedRows(filteredComplaints.map((c) => c._id));
     }
   };
 
@@ -85,7 +90,9 @@ const Supports = () => {
     (c) =>
       c.user?.fullName?.toLowerCase().includes(searchValue.toLowerCase()) ||
       c.complaintNumber?.includes(searchValue) ||
-      c.supportAgent?.toLowerCase().includes(searchValue.toLowerCase())
+      (c.supportAgent?.fullName || c.supportAgent || "")
+        .toLowerCase()
+        .includes(searchValue.toLowerCase())
   );
 
   return (
@@ -100,7 +107,7 @@ const Supports = () => {
             <div className="relative flex items-center">
               <Input
                 value={searchValue}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => setSearchValue(e.target.value)}
                 type="text"
                 className="px-[28px] dark:bg-gray-800 dark:text-white placeholder:dark:text-gray-400 min-h-[40px] rounded-[5px] border-none bg-[#F9F9F9] text-black py-2 focus:outline-none focus:ring-1 focus:ring-primary-1 placeholder:text-[#888888]"
                 placeholder={t("searchUser")}
@@ -178,34 +185,36 @@ const Supports = () => {
             ) : filteredComplaints.length > 0 ? (
               filteredComplaints.map((item) => (
                 <TableRow
-                  key={item._id || item.id}
+                  key={item._id}
                   className="text-center border-t hover:dark:bg-gray-800"
                 >
                   <TableCell className="flex items-center justify-center gap-4">
                     <input
                       type="checkbox"
-                      checked={selectedRows.includes(item._id || item.id)}
-                      onChange={() => handleCheckboxChange(item._id || item.id)}
+                      checked={selectedRows.includes(item._id)}
+                      onChange={() => handleCheckboxChange(item._id)}
                     />
                     <img
                       src={item.user?.profileImg || "/assets/driver.png"}
                       alt={item.user?.fullName}
                       className="w-[50px] h-[50px] object-cover rounded-full"
                     />
-                    {item.user?.fullName || "Not specified"}
+                    {item.user?.fullName || t("notSpecified")}
                   </TableCell>
 
                   <TableCell>{item.complaintNumber || "-"}</TableCell>
 
                   <TableCell>
                     <p
-                      className={`text-center w-fit mx-auto px-1 py-2 rounded-md font-semibold text-sm ${
-                        item.status === "solved"
+                      className={`text-center w-fit mx-auto px-3 py-2 rounded-md font-semibold text-sm ${
+                        item.status === "resolved" || item.status === "solved"
                           ? "text-green bg-[#E6F4EF]"
                           : "text-yellow-800 bg-yellow-100"
                       }`}
                     >
-                      {item.status === "solved" ? t("solved") : t("pending")}
+                      {item.status === "resolved" || item.status === "solved"
+                        ? t("solved")
+                        : t("pending")}
                     </p>
                   </TableCell>
 
@@ -223,7 +232,9 @@ const Supports = () => {
                         setOpen(true);
                       }}
                     >
-                      {item.supportAgent || "Not assigned"}
+                      {item.supportAgent?.fullName ||
+                        item.supportAgent ||
+                        t("notAssigned")}
                       <BsReply size={24} className="ltr:scale-x-[-1]" />
                     </div>
                   </TableCell>

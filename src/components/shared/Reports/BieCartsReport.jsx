@@ -1,5 +1,6 @@
 import { useTheme } from "@/components/theme-provider";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
+import PropTypes from "prop-types";
 import {
   Select,
   SelectContent,
@@ -14,12 +15,19 @@ const CustomTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
     return (
       <div className="p-2 text-sm bg-white rounded shadow dark:bg-gray-800">
-        <p>{`${payload[0].name} : ${payload[0].value}%`}</p>
+        <p>{`${payload[0].name ?? ""} : ${payload[0].value}%`}</p>
       </div>
     );
   }
+
   return null;
 };
+
+CustomTooltip.propTypes = {
+  active: PropTypes.bool,
+  payload: PropTypes.arrayOf(PropTypes.object),
+};
+
 const BieCartsReport = () => {
   const cancelValue = 12;
   const waitValue = 78;
@@ -59,7 +67,10 @@ const BieCartsReport = () => {
             stroke={theme === "dark" ? "#1f2937" : "#F9F9F9"}
           >
             {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              <Cell
+                key={`cell-${index}`}
+                fill={COLORS[index % COLORS.length]}
+              />
             ))}
           </Pie>
           <Tooltip content={<CustomTooltip />} />
@@ -74,7 +85,9 @@ const BieCartsReport = () => {
               {t("normalTrips")}
             </span>
           </div>
-          <p className="text-[#3872FA] font-bold text-center text-lg">{waitValue}%</p>
+          <p className="text-[#3872FA] font-bold text-center text-lg">
+            {waitValue}%
+          </p>
         </div>
         <div>
           <div className="flex items-center gap-2">

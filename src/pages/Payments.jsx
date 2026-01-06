@@ -59,6 +59,7 @@ const Payments = () => {
         const role = filter === "drivers" ? "driver" : "user";
         const res = await getWallets(role);
         setWallets(res.data || res || []);
+        console.log("Fetched wallets:", res.data || res || []);
       } catch (err) {
         console.error("Failed to load wallets:", err);
         setError(t("failedToLoad") || "Failed to load wallets");

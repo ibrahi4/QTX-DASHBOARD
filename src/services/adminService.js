@@ -135,35 +135,9 @@ export const getTopDrivers = async () => {
   return res.data;
 };
 
-// جلب كل أكواد الخصم
-export const getAllDiscountCodes = async () => {
-  const res = await api.get("/admin/discount-codes");
-  return res.data;
-};
-
-// إضافة كود خصم جديد
-export const createDiscountCode = async (codeData) => {
-  const res = await api.post("/admin/discount-codes", codeData);
-  return res.data;
-};
-
-// تفعيل/تعطيل كود
-export const toggleDiscountCodeActivation = async (id, isActive) => {
-  const res = await api.patch(`/admin/discount-codes/${id}/toggle`, {
-    isActive,
-  });
-  return res.data;
-};
-
-// حذف كود
-export const deleteDiscountCode = async (id) => {
-  const res = await api.delete(`/admin/discount-codes/${id}`);
-  return res.data;
-};
-
-export const getAllComplaints = async () => {
-  const res = await api.get("/admin/complaints");
-  return res.data;
+export const getAllComplaints = async (filters = {}) => {
+  const res = await api.get("/admin/complaints", { params: filters });
+  return res.data; // { data: [...], total: ..., ... }
 };
 
 // جلب رسائل شكوى معينة
@@ -182,7 +156,9 @@ export const sendMessageToComplaint = async (complaintId, { message }) => {
 
 // جلب كل المدن
 export const getAllCities = async () => {
-  const res = await api.get("/admin/cities");
+  const res = await api.get(
+    "/admin/cities?isActive=true&isActive=false&page&limit"
+  );
   return res.data;
 };
 
@@ -198,6 +174,11 @@ export const updateCityStatus = async (id, isActive) => {
   return res.data;
 };
 
+// جلب عدد الرحلات حسب المدينة
+export const getTripsByCity = async () => {
+  const res = await api.get("/admin/stats/trips-by-city"); // أو /admin/cities/trips-count
+  return res.data;
+};
 // جلب المدن مع المناطق والميزات
 export const getAllCitiesWithRegions = async () => {
   const res = await api.get("/admin/cities/with-regions");
@@ -242,6 +223,53 @@ export const getJourneyStatsChart = async () => {
 
 export const getRevenueAnalysis = async () => {
   const res = await api.get("/admin/stats/charts/rides");
+  return res.data;
+};
+
+// جلب نسبة الإلغاء ومتوسط الانتظار
+export const getCancelAndWaitStats = async () => {
+  const res = await api.get("/admin/stats/cancel-wait"); // أو أي endpoint مناسب مثل /admin/stats/rides/summary
+  return res.data;
+};
+
+export const getAllDiscountCodes = async () => {
+  const res = await api.get("/admin/vouchers");
+  return res.data; // يرجع array مباشرة داخل data
+};
+
+export const createDiscountCode = async (payload) => {
+  const res = await api.post("/admin/vouchers", payload);
+  return res.data;
+};
+
+export const toggleDiscountCodeActivation = async (id, isActive) => {
+  const res = await api.patch(`/admin/vouchers/${id}/toggle`, { isActive });
+  return res.data;
+};
+
+export const deleteDiscountCode = async (id) => {
+  const res = await api.delete(`/admin/vouchers/${id}`);
+  return res.data;
+};
+
+export const getJourneyById = async (id) => {
+  const res = await api.get(`/admin/rides/${id}`); // أو /admin/journeys/${id}
+  return res.data;
+};
+
+export const getAvailableDrivers = async () => {
+  const res = await api.get("/admin/drivers/available");
+  return res.data;
+};
+
+export const assignDriverToJourney = async (journeyId, driverId) => {
+  const res = await api.patch(`/admin/rides/${journeyId}/assign`, { driverId });
+  return res.data;
+};
+
+// جلب إحصائيات التقارير (الكروت الأربعة)
+export const getReportStats = async () => {
+  const res = await api.get("/admin/stats/report"); // أو /admin/dashboard/report-stats
   return res.data;
 };
 export default api;

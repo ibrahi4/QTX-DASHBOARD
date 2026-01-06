@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useDispatch } from "react-redux";
 import { setJourney } from "@/services/reducers/journey"; // تأكد من المسار
-import { ResponsiveDialog } from "@/components/shared/ResponsiveDialog";
 import { Button } from "@/components/ui/button";
 import { CiSearch } from "react-icons/ci";
 import { Input } from "@/components/ui/input";

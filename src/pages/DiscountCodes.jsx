@@ -37,7 +37,7 @@ const DiscountCodes = () => {
   const [openModalDel, setOpenModalDel] = useState(false);
   const [currentCodeToDelete, setCurrentCodeToDelete] = useState(null);
   const [selectedRows, setSelectedRows] = useState([]);
-  const [searchValue, setSearch] = useState("");
+  const [searchValue, setSearchValue] = useState("");
 
   const { t } = useTranslation();
 
@@ -65,12 +65,28 @@ const DiscountCodes = () => {
     const fetchCodes = async () => {
       try {
         setLoading(true);
-        const res = await getAllDiscountCodes();
-        setCodes(res.data || res || []);
+        setError(null);
+
+        const res = await getAllDiscountCodes(); // /api/v1/admin/vouchers
+        const vouchers = res.data || [];
+
+        const mappedCodes = vouchers.map((v) => ({
+          _id: v._id,
+          code: v.code || "-",
+          discountRate: v.discountValue || 0,
+          usageLimit: v.usageLimit || "-",
+          startDate: v.createdAt, // لا يوجد startDate صريح → نستخدم createdAt كبديل
+          endDate: v.expiryDate,
+          isActive: v.isActive ?? true,
+          description: v.description || "-",
+        }));
+
+        setCodes(mappedCodes);
       } catch (err) {
         console.error("Failed to load discount codes:", err);
         setError(t("failedToLoad") || "Failed to load discount codes");
         toast.error(t("failedToLoad") || "Failed to load discount codes");
+        setCodes([]);
       } finally {
         setLoading(false);
       }
@@ -83,11 +99,12 @@ const DiscountCodes = () => {
   const onSubmit = async (data) => {
     try {
       const payload = {
-        code: data.code,
+        code: data.code.toUpperCase(),
+        discountType: "percentage",
+        discountValue: Number(data.discountRate),
         usageLimit: Number(data.usageLimit),
-        discountRate: Number(data.discountRate),
-        startDate: data.startDate,
-        endDate: data.endDate,
+        expiryDate: data.endDate,
+        // minRideAmount و maxDiscount اختياري حسب الحاجة
       };
 
       await createDiscountCode(payload);
@@ -99,7 +116,17 @@ const DiscountCodes = () => {
 
       // تحديث القائمة
       const res = await getAllDiscountCodes();
-      setCodes(res.data || res || []);
+      const vouchers = res.data || [];
+      const mapped = vouchers.map((v) => ({
+        _id: v._id,
+        code: v.code || "-",
+        discountRate: v.discountValue || 0,
+        usageLimit: v.usageLimit || "-",
+        startDate: v.createdAt,
+        endDate: v.expiryDate,
+        isActive: v.isActive ?? true,
+      }));
+      setCodes(mapped);
     } catch (err) {
       toast.error(t("addFailed") || "Failed to add discount code");
     }
@@ -119,7 +146,7 @@ const DiscountCodes = () => {
     if (selectedRows.length === codes.length) {
       setSelectedRows([]);
     } else {
-      setSelectedRows(codes.map((c) => c._id || c.id));
+      setSelectedRows(codes.map((c) => c._id));
     }
   };
 
@@ -130,8 +157,18 @@ const DiscountCodes = () => {
     try {
       await Promise.all(selectedRows.map((id) => deleteDiscountCode(id)));
       toast.success(t("deletedSuccess") || "Selected codes deleted");
+
       const res = await getAllDiscountCodes();
-      setCodes(res.data || res || []);
+      const mapped = (res.data || []).map((v) => ({
+        _id: v._id,
+        code: v.code || "-",
+        discountRate: v.discountValue || 0,
+        usageLimit: v.usageLimit || "-",
+        startDate: v.createdAt,
+        endDate: v.expiryDate,
+        isActive: v.isActive ?? true,
+      }));
+      setCodes(mapped);
       setSelectedRows([]);
     } catch (err) {
       toast.error(t("deleteFailed") || "Failed to delete codes");
@@ -143,12 +180,20 @@ const DiscountCodes = () => {
     if (!currentCodeToDelete) return;
 
     try {
-      await deleteDiscountCode(
-        currentCodeToDelete._id || currentCodeToDelete.id
-      );
+      await deleteDiscountCode(currentCodeToDelete._id);
       toast.success(t("deleted") || "Code deleted");
+
       const res = await getAllDiscountCodes();
-      setCodes(res.data || res || []);
+      const mapped = (res.data || []).map((v) => ({
+        _id: v._id,
+        code: v.code || "-",
+        discountRate: v.discountValue || 0,
+        usageLimit: v.usageLimit || "-",
+        startDate: v.createdAt,
+        endDate: v.expiryDate,
+        isActive: v.isActive ?? true,
+      }));
+      setCodes(mapped);
       setOpenModalDel(false);
       setCurrentCodeToDelete(null);
     } catch (err) {
@@ -161,8 +206,18 @@ const DiscountCodes = () => {
     try {
       await toggleDiscountCodeActivation(codeId, !currentStatus);
       toast.success(t("statusUpdated") || "Activation status updated");
+
       const res = await getAllDiscountCodes();
-      setCodes(res.data || res || []);
+      const mapped = (res.data || []).map((v) => ({
+        _id: v._id,
+        code: v.code || "-",
+        discountRate: v.discountValue || 0,
+        usageLimit: v.usageLimit || "-",
+        startDate: v.createdAt,
+        endDate: v.expiryDate,
+        isActive: v.isActive ?? true,
+      }));
+      setCodes(mapped);
     } catch (err) {
       toast.error(t("updateFailed") || "Failed to update status");
     }
@@ -206,7 +261,7 @@ const DiscountCodes = () => {
               <div className="relative flex items-center">
                 <Input
                   value={searchValue}
-                  onChange={(e) => setSearch(e.target.value)}
+                  onChange={(e) => setSearchValue(e.target.value)}
                   type="text"
                   className="px-[28px] dark:bg-gray-800 dark:text-white placeholder:dark:text-gray-400 min-h-[40px] rounded-full border-none bg-[#F9F9F9] text-black py-2 focus:outline-none focus:ring-1 focus:ring-primary-1 placeholder:text-[#888888]"
                   placeholder={t("searchUser")}
@@ -292,7 +347,7 @@ const DiscountCodes = () => {
               ) : filteredCodes.length > 0 ? (
                 filteredCodes.map((item, i) => (
                   <TableRow
-                    key={item._id || item.id}
+                    key={item._id}
                     className={`text-center border-t hover:dark:bg-gray-800 dark:bg-${
                       i % 2 === 0 ? "gray-800" : ""
                     } bg-${i % 2 === 0 ? "[#F5F7FA]" : ""}`}
@@ -301,21 +356,17 @@ const DiscountCodes = () => {
                       <input
                         className="mx-2"
                         type="checkbox"
-                        checked={selectedRows.includes(item._id || item.id)}
-                        onChange={() =>
-                          handleCheckboxChange(item._id || item.id)
-                        }
+                        checked={selectedRows.includes(item._id)}
+                        onChange={() => handleCheckboxChange(item._id)}
                       />
-                      {item.code || "-"}
+                      {item.code}
                     </TableCell>
                     <TableCell>
                       {item.startDate
                         ? new Date(item.startDate).toLocaleDateString("ar-EG")
                         : "-"}
                     </TableCell>
-                    <TableCell>
-                      {item.discountRate ? `${item.discountRate}%` : "-"}
-                    </TableCell>
+                    <TableCell>{item.discountRate}%</TableCell>
                     <TableCell>
                       {item.endDate
                         ? new Date(item.endDate).toLocaleDateString("ar-EG")
@@ -324,12 +375,9 @@ const DiscountCodes = () => {
                     <TableCell>
                       <div className="flex justify-center">
                         <Switch
-                          checked={item.isActive ?? false}
+                          checked={item.isActive}
                           onCheckedChange={(checked) =>
-                            handleToggleActivation(
-                              item._id || item.id,
-                              item.isActive
-                            )
+                            handleToggleActivation(item._id, item.isActive)
                           }
                           className="data-[state=unchecked]:bg-gray-400 data-[state=checked]:bg-[#3872FA]"
                         />
@@ -458,28 +506,6 @@ const DiscountCodes = () => {
                       />
                       <span className="text-sm text-red-500 mt-1 block">
                         {errors.discountRate?.message}
-                      </span>
-                    </FormItem>
-                  )}
-                />
-
-                <Controller
-                  name="startDate"
-                  control={control}
-                  rules={{ required: t("dateRequired") }}
-                  render={({ field }) => (
-                    <FormItem className="relative w-full">
-                      <label className="font-semibold text-[#717171] dark:text-white">
-                        {t("startDate")}
-                      </label>
-                      <DateInput
-                        value={field.value || null}
-                        onChange={field.onChange}
-                        triggerClassName="min-h-[56px]"
-                        placeholder={t("startDate")}
-                      />
-                      <span className="text-sm text-red-500 mt-1 block">
-                        {errors.startDate?.message}
                       </span>
                     </FormItem>
                   )}

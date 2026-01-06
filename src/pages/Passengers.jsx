@@ -62,6 +62,7 @@ const Passengers = () => {
         setLoading(true);
         const res = await getAllPassengers();
         setPassengers(res.data || res || []);
+        console.log("Fetched passengers:", res.data || res || []);
       } catch (err) {
         console.error("Error fetching passengers:", err);
         setError(t("failedToLoad") || "Failed to load passengers");
