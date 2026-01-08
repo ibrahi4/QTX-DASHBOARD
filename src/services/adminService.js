@@ -205,7 +205,7 @@ export const getRidesStats = async () => {
 
 // جلب أحدث الرحلات
 export const getLatestJourneys = async () => {
-  const res = await api.get("/admin/journeys/latest"); // أو /admin/rides/latest
+  const res = await api.get("/admin/rides/stats"); // أو /admin/rides/latest
   return res.data;
 };
 
@@ -228,7 +228,7 @@ export const getRevenueAnalysis = async () => {
 
 // جلب نسبة الإلغاء ومتوسط الانتظار
 export const getCancelAndWaitStats = async () => {
-  const res = await api.get("/admin/stats/cancel-wait"); // أو أي endpoint مناسب مثل /admin/stats/rides/summary
+  const res = await api.get("/admin/rides/stats"); // أو أي endpoint مناسب مثل /admin/stats/rides/summary
   return res.data;
 };
 
@@ -269,7 +269,13 @@ export const assignDriverToJourney = async (journeyId, driverId) => {
 
 // جلب إحصائيات التقارير (الكروت الأربعة)
 export const getReportStats = async () => {
-  const res = await api.get("/admin/stats/report"); // أو /admin/dashboard/report-stats
+  const res = await api.get("/admin/stats/dashboard"); // أو /admin/dashboard/report-stats
+  return res.data;
+};
+
+// جلب نسب الرحلات العادية مقابل VIP
+export const getTripTypesStats = async () => {
+  const res = await api.get("/admin/stats/dashboard"); // أو /admin/stats/trips/vip-vs-normal
   return res.data;
 };
 export default api;

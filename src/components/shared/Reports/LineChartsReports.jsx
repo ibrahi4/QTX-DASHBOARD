@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import PropTypes from "prop-types";
 import {
   LineChart,
   Line,
@@ -102,6 +103,11 @@ const LineChartsReports = () => {
     return null;
   };
 
+  CustomTooltip.propTypes = {
+    active: PropTypes.bool,
+    payload: PropTypes.arrayOf(PropTypes.object),
+  };
+
   if (loading) {
     return (
       <div className="p-8 bg-white h-full rounded-[20px] shadow-main dark:bg-gray-900 flex items-center justify-center">
@@ -130,7 +136,7 @@ const LineChartsReports = () => {
             {t("revenueAnalysis")}
           </h2>
           <p className="text-[#A3ED0] flex items-center gap-2 mt-2">
-            {t("totalJourneysThisPeriod")}
+            {t("Total Journeys This Period")}
             <span className="text-[#11A849] font-bold">
               {totalTrips.toLocaleString()}
             </span>
@@ -138,7 +144,7 @@ const LineChartsReports = () => {
           </p>
           <div className="flex items-center gap-2 mt-1 text-sm">
             <p className="text-[#11A849]">{t("onTrack")}</p>
-            <img src={quick} alt="quick" className="w-5 h-5" />
+            <img src={quick} alt="quick" className="w-3 h-3" />
           </div>
         </div>
         <div className="text-sm text-gray-400 dark:text-gray-300">

@@ -142,7 +142,7 @@ const CardReport = () => {
               <p className="text-base text-[#777777] mb-2 dark:text-white">
                 {t("avgTripTime")}
               </p>
-              <h2 className="text-3xl text-[#717171] dark:text-gray-400 font-medium">
+              <h2 className="text-2xl text-[#717171] dark:text-gray-400 font-medium">
                 {stats.avgTripTime} {t("minute")}
               </h2>
             </div>

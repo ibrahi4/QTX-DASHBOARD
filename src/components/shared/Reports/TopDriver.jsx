@@ -22,7 +22,7 @@ const TopDriver = () => {
         setLoading(true);
         const res = await getTopDrivers(); // API call to get top drivers
         const driversData = res.data || res || [];
-
+        console.log("Fetched top drivers:", driversData);
         // Map backend data to required format
         const mappedDrivers = driversData.map((driver) => ({
           id: driver._id || driver.id,
