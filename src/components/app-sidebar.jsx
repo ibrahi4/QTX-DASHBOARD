@@ -86,7 +86,7 @@ export function AppSidebar({ ...props }) {
         icon: <IoMdSettings size={18} />,
         subItems: [
           { title: t("systemSettings"), url: "/settings" },
-          { title: t("cities"), url: "/settings/cities" },
+
           { title: t("ads"), url: "/settings/add-ad" },
         ],
       },
@@ -94,7 +94,10 @@ export function AppSidebar({ ...props }) {
   };
   return (
     <Sidebar {...props}>
-      <SidebarContent dir={i18n.dir()} className="w-64 p-4 bg-white dark:bg-gray-900">
+      <SidebarContent
+        dir={i18n.dir()}
+        className="w-64 p-4 bg-white dark:bg-gray-900"
+      >
         <SidebarGroup>
           <SidebarGroupLabel className="flex justify-center mt-6 mb-12">
             <img src={logo} alt="Logo" className="h-12" />

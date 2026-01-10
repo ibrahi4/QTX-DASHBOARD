@@ -30,7 +30,7 @@ const CardReport = () => {
         setLoading(true);
         const res = await getReportStats(); // استدعاء الـ API
         const data = res.data || {};
-        console.log("Fetched report stats:", data);
+
         setStats({
           totalRevenue: data.totalRevenue || data.revenue || 0,
           totalRevenueAlt:

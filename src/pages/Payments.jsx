@@ -132,7 +132,7 @@ const Payments = () => {
 
   const headData = [
     t("userName"),
-    t("city"),
+
     t("availableBalance"),
     t("currentBalance"),
     t("status"),
@@ -203,15 +203,6 @@ const Payments = () => {
               >
                 <span>{t("changeCommission")}</span>
               </Button>
-              <Select>
-                <SelectTrigger className="w-[100px] dark:text-white">
-                  <SelectValue placeholder={t("city")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="baghdad">Baghdad</SelectItem>
-                  <SelectItem value="sulaymaniyah">Sulaymaniyah</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
           </div>
 
@@ -249,7 +240,7 @@ const Payments = () => {
                         />
                         {user.fullName || "Not specified"}
                       </TableCell>
-                      <TableCell>{user.city || "-"}</TableCell>
+
                       <TableCell>
                         <div className="py-2 bg-[#E6F4EF] border text-primary-1 border-[#3872FA] rounded">
                           {wallet.availableBalance || 0}

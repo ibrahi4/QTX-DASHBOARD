@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import PropTypes from "prop-types";
 import { useTheme } from "@/components/theme-provider";
 import {
   Select,
@@ -26,6 +27,11 @@ const CustomTooltip = ({ active, payload }) => {
   return null;
 };
 
+CustomTooltip.propTypes = {
+  active: PropTypes.bool,
+  payload: PropTypes.array,
+};
+
 const BieCartsReport = () => {
   const { theme } = useTheme();
   const { t } = useTranslation();
@@ -40,7 +46,7 @@ const BieCartsReport = () => {
         setLoading(true);
         const res = await getTripTypesStats(); // استدعاء الـ API
         const data = res.data || {};
-
+        console.log("Fetched trip types stats:", data);
         // افتراض: الـ API يرجع عدد أو نسب مئوية للرحلات VIP و Normal
         let vip = data.vipPercentage || data.vipTripsPercentage || 0;
         let normal = data.normalPercentage || data.normalTripsPercentage || 0;
@@ -48,7 +54,6 @@ const BieCartsReport = () => {
         // لو رجع أرقام خام (عدد الرحلات)
         if (data.totalTrips && (data.vipTrips || data.vipCount)) {
           const vipCount = data.vipTrips || data.vipCount || 0;
-          const normalCount = data.totalTrips - vipCount;
           vip = Math.round((vipCount / data.totalTrips) * 100);
           normal = 100 - vip;
         }

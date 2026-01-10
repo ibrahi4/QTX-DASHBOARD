@@ -69,6 +69,7 @@ const Settings = () => {
         setLoading(true);
         const res = await getAllCities();
         setCities(res.data || res || []);
+        console.log("Fetched cities:", res.data || res || []);
       } catch (err) {
         console.error("Failed to load cities:", err);
         setError(t("failedToLoad") || "Failed to load cities");
@@ -261,7 +262,7 @@ const Settings = () => {
                       </p>
                     </TableCell>
                     <TableCell>
-                      {item.regions?.length || 0} {t("regions")}
+                      {item.location.coordinates?.length || 0} {t("regions")}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center justify-center gap-2">

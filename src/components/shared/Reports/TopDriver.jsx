@@ -22,17 +22,15 @@ const TopDriver = () => {
         setLoading(true);
         const res = await getTopDrivers(); // API call to get top drivers
         const driversData = res.data || res || [];
-        console.log("Fetched top drivers:", driversData);
+
         // Map backend data to required format
         const mappedDrivers = driversData.map((driver) => ({
           id: driver._id || driver.id,
           img: driver.profileImg || "/assets/driver.png",
           name: driver.fullName || "Not specified",
-          cost: driver.totalEarnings ? `${driver.totalEarnings} ر.س` : "-",
+          cost: driver.earnings.today ? `${driver.earnings.today} ر.س` : "-",
           rate: driver.rating?.toFixed(1) || "0.0",
-          status: driver.earnings
-            ? `دع ${driver.earnings.toLocaleString()}`
-            : "-",
+          status: driver.earnings.today ? `${driver.earnings.today} ر.س` : "-",
         }));
 
         setTopDrivers(mappedDrivers.slice(0, 4)); // Show only top 4
@@ -52,9 +50,7 @@ const TopDriver = () => {
     <div className="p-8 h-80 bg-white rounded-[20px] shadow-main dark:bg-gray-900">
       <div className="flex items-center justify-between">
         <div className="text-[#717171] dark:text-white">{t("topDrivers")}</div>
-        <div className="text-[#717171] dark:text-white cursor-pointer hover:text-primary-1 transition">
-          {t("viewAll")}
-        </div>
+        <div className="text-[#717171] dark:text-white cursor-pointer hover:text-primary-1 transition"></div>
       </div>
 
       <div className="mt-6">

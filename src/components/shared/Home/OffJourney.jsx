@@ -11,9 +11,9 @@ import { useTranslation } from "react-i18next";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { toast } from "react-hot-toast";
 import Loading from "@/components/feedback/Loading";
-import { getCancelAndWaitStats } from "@/services/adminService";
+import { getCancellationStats } from "@/services/adminService";
 
-const COLORS = ["#EC373B", "#007AFF", "#EFF4FB"]; // أحمر: إلغاء، أزرق: انتظار، رمادي: باقي
+const COLORS = ["#EC373B", "#007AFF", "#EFF4FB"]; // أحمر: ملغاة، أزرق: مكتملة/في الانتظار، رمادي: باقي
 
 const CustomTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
@@ -31,39 +31,33 @@ const OffJourney = () => {
   const { t } = useTranslation();
 
   const [cancelRate, setCancelRate] = useState(0);
-  const [waitRate, setWaitRate] = useState(0);
+  const [completedRate, setCompletedRate] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
         setLoading(true);
-        const res = await getCancelAndWaitStats(); // استدعاء الـ API
+        const res = await getCancellationStats(); // استدعاء الـ API
         const data = res.data || {};
-        console.log("Fetched cancel & wait stats:", data);
+        // استخدام البيانات الحقيقية من الـ response
+        const total = data.totalRides || 1; // تجنب القسمة على صفر
+        const cancelled = data.cancelledRides || 0;
 
-        // افتراض: الـ API يرجع نسب مئوية أو أرقام نحولها لنسبة
-        let cancel = data.cancelRate || data.cancelledPercentage || 0;
-        let wait =
-          data.waitRate || data.avgWaitingPercentage || data.waitingRate || 0;
+        const cancelPercentage = Math.round((cancelled / total) * 100);
+        const completedPercentage = 100 - cancelPercentage;
 
-        // لو الـ API رجع أرقام خام (مثل عدد الرحلات الملغاة / الكلية)، نحسب النسبة
-        if (data.totalTrips && data.cancelledTrips) {
-          cancel = Math.round((data.cancelledTrips / data.totalTrips) * 100);
-        }
-        if (data.totalTrips && data.waitingTrips) {
-          wait = Math.round((data.waitingTrips / data.totalTrips) * 100);
-        }
-
-        setCancelRate(Math.round(cancel));
-        setWaitRate(Math.round(wait));
+        setCancelRate(cancelPercentage);
+        setCompletedRate(completedPercentage);
       } catch (err) {
-        console.error("Failed to load cancel & wait stats:", err);
-        toast.error(t("failedToLoad") || "Failed to load statistics");
+        console.error("Failed to load cancellation stats:", err);
+        toast.error(
+          t("failedToLoad") || "Failed to load cancellation statistics"
+        );
 
         // fallback للقيم الأصلية لو الـ API فشل
         setCancelRate(12);
-        setWaitRate(78);
+        setCompletedRate(78);
       } finally {
         setLoading(false);
       }
@@ -72,11 +66,11 @@ const OffJourney = () => {
     fetchStats();
   }, [t]);
 
-  const remainingValue = Math.max(0, 100 - (cancelRate + waitRate));
+  const remainingValue = Math.max(0, 100 - (cancelRate + completedRate));
 
   const data = [
     { name: t("cancelRate"), value: cancelRate },
-    { name: t("avgWaitingTime"), value: waitRate },
+    { name: t("completedTrips") || "الرحلات المكتملة", value: completedRate },
     { name: "باقي الدائرة", value: remainingValue },
   ];
 
@@ -143,11 +137,11 @@ const OffJourney = () => {
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-[#007AFF]"></span>
             <span className="text-sm font-medium dark:text-white text-[#888888]">
-              {t("avgWaitingTime")}
+              {t("completedTrips") || "الرحلات المكتملة"}
             </span>
           </div>
           <p className="text-[#007AFF] font-bold text-center text-lg">
-            {waitRate}%
+            {completedRate}%
           </p>
         </div>
       </section>

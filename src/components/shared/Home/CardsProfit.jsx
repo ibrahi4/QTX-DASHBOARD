@@ -24,7 +24,6 @@ const CardsProfit = () => {
       try {
         const res = await getDashboardStats(); // استدعاء الـ API
         const data = res.data || {};
-        console.log("Fetched dashboard stats:", data);
 
         setStats({
           totalRevenue: data.totalRevenue || data.revenue || 0,

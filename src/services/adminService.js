@@ -17,60 +17,82 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// تسجيل دخول الأدمن
+/* ==================== Auth ==================== */
 export const loginAdmin = async (email, password) => {
   const res = await api.post("/auth/admin/login", { email, password });
-  localStorage.setItem("token", res.data.token);
+  if (res.data.token) {
+    localStorage.setItem("token", res.data.token);
+  }
   return res.data;
 };
 
-// جلب كل السائقين
-export const getAllDrivers = async () => {
-  const res = await api.get("/admin/drivers");
-  return res.data; // { success: true, data: [...] }
+export const logoutAdmin = () => {
+  localStorage.removeItem("token");
 };
 
-// جلب تفاصيل سائق واحد بالـ ID
+/* ==================== Drivers Management ==================== */
+export const getAllDrivers = async (params = {}) => {
+  const res = await api.get("/admin/drivers", { params });
+  return res.data;
+};
+
+export const getTopDrivers = async (params = {}) => {
+  const res = await api.get("/admin/drivers/top", { params });
+  return res.data;
+};
+
 export const getDriverById = async (id) => {
   const res = await api.get(`/admin/drivers/${id}`);
   return res.data;
 };
 
-// إضافة سائق جديد من الأدمن
-export const createDriver = async (driverData) => {
-  const res = await api.post("/admin/drivers/create", driverData);
-  return res.data;
-};
+export const createDriver = async (data) => {
+  try {
+    // غير المسار ده من:
+    // const res = await api.post("/api/v1/api/v1/admin/drivers/create", data);
+    // إلى:
+    const res = await api.post("/api/v1/admin/drivers/create", data);
 
-// قبول السائق
+    return res.data;
+  } catch (err) {
+    console.error("Create driver error:", err.response?.data);
+    console.log("Full error response:", err.response?.data);
+    throw err;
+  }
+};
 export const approveDriver = async (id) => {
   const res = await api.put(`/admin/approve/${id}`);
   return res.data;
 };
-// Add this function to your adminService.js
-export const getAllRides = async () => {
-  const res = await api.get("/admin/rides");
-  return res.data; // Expected: { success: true, data: [rides array] }
-};
-// رفض السائق (مع إمكانية إرسال سبب الرفض اختياريًا)
+
 export const rejectDriver = async (id, reason = "") => {
   const payload = reason ? { reason } : {};
   const res = await api.put(`/admin/reject/${id}`, payload);
   return res.data;
 };
 
-// تسجيل الخروج
-export const logoutAdmin = () => {
-  localStorage.removeItem("token");
+/* ==================== Passengers / Users Management ==================== */
+export const getAllPassengers = async (params = {}) => {
+  const res = await api.get("/admin/users", {
+    params: { role: "user", ...params },
+  });
+  return res.data;
 };
 
-export const getAllPassengers = async () => {
-  const res = await api.get("/admin/users?role=user"); // أو أي endpoint للركاب
+export const getPassengerById = async (id) => {
+  const res = await api.get(`/admin/users/${id}`);
   return res.data;
 };
 
 export const createPassenger = async (passengerData) => {
-  const res = await api.post("/admin/users/create", passengerData); // حسب الـ endpoint
+  const res = await api.post("/admin/users/create", passengerData);
+  return res.data;
+};
+
+export const updatePassenger = async (id, passengerData) => {
+  const res = await api.put(`/admin/users/${id}`, passengerData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
   return res.data;
 };
 
@@ -84,69 +106,48 @@ export const deletePassenger = async (id) => {
   return res.data;
 };
 
-// إضافة رحلة جديدة (حسب الـ endpoint الفعلي)
+/* ==================== Rides / Journeys ==================== */
+export const getAllRides = async (params = {}) => {
+  const res = await api.get("/admin/rides", { params });
+  return res.data;
+};
+
+export const getLatestJourneys = async (params = {}) => {
+  const res = await api.get("/admin/rides?latest=true", { params }); // أو /admin/rides مع فلاتر
+  return res.data;
+};
+
+export const getJourneyById = async (id) => {
+  const res = await api.get(`/admin/rides/${id}`);
+  return res.data;
+};
+
 export const createRide = async (rideData) => {
-  const res = await api.post("/admin/rides", rideData); // أو /admin/journeys حسب الباك
+  const res = await api.post("/admin/rides", rideData);
   return res.data;
 };
 
-// جلب تفاصيل راكب واحد
-export const getPassengerById = async (id) => {
-  const res = await api.get(`/admin/users/${id}`); // أو /admin/passengers/${id} حسب الـ endpoint
+export const getAvailableDrivers = async (params = {}) => {
+  const res = await api.get("/admin/drivers/available", { params });
   return res.data;
 };
 
-// تحديث بيانات الراكب
-export const updatePassenger = async (id, passengerData) => {
-  const res = await api.put(`/admin/users/${id}`, passengerData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+export const assignDriverToJourney = async (journeyId, driverId) => {
+  const res = await api.patch(`/admin/rides/${journeyId}/assign`, { driverId });
   return res.data;
 };
 
-// جلب المحافظ حسب الدور
-export const getWallets = async (role) => {
-  const res = await api.get(`/admin/wallets?role=${role}`);
+/* ==================== Complaints / Support ==================== */
+export const getAllComplaints = async (params = {}) => {
+  const res = await api.get("/admin/complaints", { params });
   return res.data;
 };
 
-// شحن رصيد
-export const topUpWallet = async (userId, data) => {
-  const res = await api.post(`/admin/wallet/topup/${userId}`, data);
-  return res.data;
-};
-
-// خصم من الرصيد
-export const deductFromWallet = async (userId, data) => {
-  const res = await api.post(`/admin/wallet/deduct/${userId}`, data);
-  return res.data;
-};
-
-// إرسال إشعار لمستخدم
-export const sendNotificationToUser = async (userId, data) => {
-  const res = await api.post(`/admin/notifications/user/${userId}`, data);
-  return res.data;
-};
-
-// (top drivers)
-export const getTopDrivers = async () => {
-  const res = await api.get("/admin/drivers/top"); // حسب الـ endpoint الفعلي
-
-  return res.data;
-};
-
-export const getAllComplaints = async (filters = {}) => {
-  const res = await api.get("/admin/complaints", { params: filters });
-  return res.data; // { data: [...], total: ..., ... }
-};
-
-// جلب رسائل شكوى معينة
 export const getComplaintMessages = async (complaintId) => {
   const res = await api.get(`/admin/complaints/${complaintId}/messages`);
   return res.data;
 };
 
-// إرسال رسالة في شكوى
 export const sendMessageToComplaint = async (complaintId, { message }) => {
   const res = await api.post(`/admin/complaints/${complaintId}/reply`, {
     message,
@@ -154,87 +155,10 @@ export const sendMessageToComplaint = async (complaintId, { message }) => {
   return res.data;
 };
 
-// جلب كل المدن
-export const getAllCities = async () => {
-  const res = await api.get(
-    "/admin/cities?isActive=true&isActive=false&page&limit"
-  );
+/* ==================== Discount Codes / Vouchers ==================== */
+export const getAllDiscountCodes = async (params = {}) => {
+  const res = await api.get("/admin/vouchers", { params });
   return res.data;
-};
-
-// إضافة مدينة
-export const createCity = async (cityData) => {
-  const res = await api.post("/admin/cities", cityData);
-  return res.data;
-};
-
-// تحديث حالة المدينة (تفعيل/تعطيل)
-export const updateCityStatus = async (id, isActive) => {
-  const res = await api.patch(`/admin/cities/${id}/status`, { isActive });
-  return res.data;
-};
-
-// جلب عدد الرحلات حسب المدينة
-export const getTripsByCity = async () => {
-  const res = await api.get("/admin/stats/trips-by-city"); // أو /admin/cities/trips-count
-  return res.data;
-};
-// جلب المدن مع المناطق والميزات
-export const getAllCitiesWithRegions = async () => {
-  const res = await api.get("/admin/cities/with-regions");
-  return res.data;
-};
-
-// تحديث ميزات المدينة
-export const updateCityFeatures = async (cityId, features) => {
-  const res = await api.patch(`/admin/cities/${cityId}/features`, features);
-  return res.data;
-};
-
-// حذف مدينة
-export const deleteCity = async (cityId) => {
-  const res = await api.delete(`/admin/cities/${cityId}`);
-  return res.data;
-};
-
-// جلب إحصائيات الرحلات
-export const getRidesStats = async () => {
-  const res = await api.get("/admin/stats/rides");
-  return res.data;
-};
-
-// جلب أحدث الرحلات
-export const getLatestJourneys = async () => {
-  const res = await api.get("/admin/rides/stats"); // أو /admin/rides/latest
-  return res.data;
-};
-
-// جلب إحصائيات الداشبورد الرئيسية
-export const getDashboardStats = async () => {
-  const res = await api.get("/admin/stats/dashboard"); // أو /admin/stats
-  return res.data;
-};
-
-// جلب إحصائيات الرحلات للـ Bar Chart (أيام أو تواريخ)
-export const getJourneyStatsChart = async () => {
-  const res = await api.get("/admin/stats/rides?startDate&endDate"); // أو /admin/journeys/stats/chart
-  return res.data;
-};
-
-export const getRevenueAnalysis = async () => {
-  const res = await api.get("/admin/stats/charts/rides");
-  return res.data;
-};
-
-// جلب نسبة الإلغاء ومتوسط الانتظار
-export const getCancelAndWaitStats = async () => {
-  const res = await api.get("/admin/rides/stats"); // أو أي endpoint مناسب مثل /admin/stats/rides/summary
-  return res.data;
-};
-
-export const getAllDiscountCodes = async () => {
-  const res = await api.get("/admin/vouchers");
-  return res.data; // يرجع array مباشرة داخل data
 };
 
 export const createDiscountCode = async (payload) => {
@@ -252,30 +176,109 @@ export const deleteDiscountCode = async (id) => {
   return res.data;
 };
 
-export const getJourneyById = async (id) => {
-  const res = await api.get(`/admin/rides/${id}`); // أو /admin/journeys/${id}
+/* ==================== Cities Management ==================== */
+export const getAllCities = async (params = {}) => {
+  const res = await api.get("/admin/cities", { params });
   return res.data;
 };
 
-export const getAvailableDrivers = async () => {
-  const res = await api.get("/admin/drivers/available");
+export const getAllCitiesWithRegions = async () => {
+  const res = await api.get("/admin/cities/with-regions");
   return res.data;
 };
 
-export const assignDriverToJourney = async (journeyId, driverId) => {
-  const res = await api.patch(`/admin/rides/${journeyId}/assign`, { driverId });
+export const createCity = async (cityData) => {
+  const res = await api.post("/admin/cities", cityData);
   return res.data;
 };
 
-// جلب إحصائيات التقارير (الكروت الأربعة)
+export const updateCityStatus = async (id, isActive) => {
+  const res = await api.patch(`/admin/cities/${id}/status`, { isActive });
+  return res.data;
+};
+
+export const updateCityFeatures = async (cityId, features) => {
+  const res = await api.patch(`/admin/cities/${cityId}/features`, features);
+  return res.data;
+};
+
+export const deleteCity = async (cityId) => {
+  const res = await api.delete(`/admin/cities/${cityId}`);
+  return res.data;
+};
+
+/* ==================== Wallets ==================== */
+export const getWallets = async (role, params = {}) => {
+  const res = await api.get("/admin/wallets", { params: { role, ...params } });
+  return res.data;
+};
+
+export const topUpWallet = async (userId, data) => {
+  const res = await api.post(`/admin/wallet/topup/${userId}`, data);
+  return res.data;
+};
+
+export const deductFromWallet = async (userId, data) => {
+  const res = await api.post(`/admin/wallet/deduct/${userId}`, data);
+  return res.data;
+};
+
+/* ==================== Notifications ==================== */
+export const sendNotificationToUser = async (userId, data) => {
+  const res = await api.post(`/admin/notifications/user/${userId}`, data);
+  return res.data;
+};
+
+/* ==================== Statistics & Dashboard ==================== */
+export const getDashboardStats = async () => {
+  const res = await api.get("/admin/stats/dashboard");
+  return res.data;
+};
+
+export const getRidesStats = async (params = {}) => {
+  const res = await api.get("/admin/stats/rides", { params });
+  return res.data;
+};
+
+export const getJourneyStatsChart = async (params = {}) => {
+  const res = await api.get("/admin/stats/charts/rides", { params });
+  return res.data;
+};
+
+export const getRevenueAnalysis = async (params = {}) => {
+  const res = await api.get("/admin/stats/revenue", { params });
+  return res.data;
+};
+
+export const getTripsByCity = async (params = {}) => {
+  const res = await api.get("/admin/stats/trips-by-city", { params });
+  return res.data;
+};
+
+export const getCancellationStats = async (params = {}) => {
+  const res = await api.get("/admin/stats/cancellations", { params });
+  return res.data;
+};
+
 export const getReportStats = async () => {
-  const res = await api.get("/admin/stats/dashboard"); // أو /admin/dashboard/report-stats
+  const res = await api.get("/admin/stats/dashboard");
   return res.data;
 };
 
-// جلب نسب الرحلات العادية مقابل VIP
-export const getTripTypesStats = async () => {
-  const res = await api.get("/admin/stats/dashboard"); // أو /admin/stats/trips/vip-vs-normal
+export const getTripTypesStats = async (params = {}) => {
+  const res = await api.get("/admin/stats/trip-types", { params });
   return res.data;
 };
+
+// في adminService.js
+export const acceptJourney = async (journeyId) => {
+  const res = await api.put(`/admin/approve/${journeyId}`); // ← غيرنا patch → put ومسار accept → approve
+  return res.data;
+};
+
+export const rejectJourney = async (journeyId) => {
+  const res = await api.put(`/admin/reject/${journeyId}`); // نفس التغيير
+  return res.data;
+};
+
 export default api;

@@ -47,13 +47,12 @@ const Journeys = () => {
         setLoading(true);
         const res = await getAllRides();
         const ridesData = res.data?.rides || res.data || res || [];
-        console.log("Fetched journeys:", ridesData);
 
         const mappedJourneys = ridesData.map((ride) => ({
           id: ride._id || ride.id,
           img: ride.driver?.profileImg || "/assets/driver.png",
           name: ride.driver?.fullName || t("notSpecified"),
-          go: ride.pickupLocation?.name || ride.fromCity || t("notSpecified"),
+          go: ride.departure || t("notSpecified"),
           arrive:
             ride.dropoffLocation?.address || ride.toCity || t("notSpecified"),
           cost: ride.fare ? `${ride.fare} SAR` : "-",
@@ -111,7 +110,7 @@ const Journeys = () => {
         id: ride._id || ride.id,
         img: ride.driver?.profileImg || "/assets/driver.png",
         name: ride.driver?.fullName || t("notSpecified"),
-        go: ride.pickupLocation?.name || ride.fromCity || t("notSpecified"),
+        go: ride.departure || t("notSpecified"),
         arrive: ride.dropoffLocation?.name || ride.toCity || t("notSpecified"),
         cost: ride.fare ? `${ride.fare} ر.س` : "-",
         status: ride.status || "pending",
@@ -162,15 +161,6 @@ const Journeys = () => {
           <h1 className="text-2xl font-medium dark:text-blue-300">
             {t("totalJourneys")}
           </h1>
-          <div className="flex gap-4">
-            <Button
-              onClick={() => setOpenModal(true)}
-              className="flex min-h-[40px] items-center gap-2 text-white"
-            >
-              <LuCircleFadingPlus />
-              <span>{t("addJourney")}</span>
-            </Button>
-          </div>
         </div>
       </div>
 
@@ -197,21 +187,11 @@ const Journeys = () => {
           <div className="flex flex-wrap justify-end gap-2">
             <Select>
               <SelectTrigger className="w-[100px] dark:text-white">
-                <SelectValue placeholder={t("city")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="baghdad">بغداد</SelectItem>
-                <SelectItem value="duhok">دهوك</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select>
-              <SelectTrigger className="w-[100px] dark:text-white">
                 <SelectValue placeholder={t("journeyStatus")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="completed">مكتملة</SelectItem>
-                <SelectItem value="canceled">ملغاة</SelectItem>
+                <SelectItem value="completed">completed</SelectItem>
+                <SelectItem value="canceled">canceled</SelectItem>
               </SelectContent>
             </Select>
 
@@ -334,10 +314,6 @@ const Journeys = () => {
                         <SelectTrigger className="no-focus dark:bg-gray-800 dark:text-white min-h-[56px] bg-[#F9F9F9] text-black">
                           <SelectValue placeholder={t("selectCity")} />
                         </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="baghdad">بغداد</SelectItem>
-                          <SelectItem value="duhok">دهوك</SelectItem>
-                        </SelectContent>
                       </Select>
                       <span className="text-sm text-red-500 mt-1 block">
                         {errors.type_1?.message}

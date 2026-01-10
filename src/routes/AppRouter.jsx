@@ -15,7 +15,7 @@ import CurrentJourneys from "@/pages/journeysMap/currentJourneys";
 import PassengerInfo from "@/pages/passengerInfo";
 import DriversInfo from "@/pages/driversInfo";
 import AddAD from "@/pages/addAD";
-import Cities from "@/pages/cities";
+
 import JourneyDetails from "@/pages/journeysMap/journeyDetials";
 import Login from "@/pages/Login";
 // import { useEffect } from "react";
@@ -33,7 +33,7 @@ function AppRouter() {
         <Route path="/journey-details/:id" element={<JourneyDetails />} />
         <Route path="/add-journey" element={<AddJourney />} />
         <Route path="/settings/add-ad" element={<AddAD />} />
-        <Route path="/settings/cities" element={<Cities />} />
+        {/* <Route path="/settings/cities" element={<Cities />} /> */}
 
         <Route path="/users/passengers" element={<Passengers />} />
         <Route path="/users/passengers/:id" element={<PassengerInfo />} />

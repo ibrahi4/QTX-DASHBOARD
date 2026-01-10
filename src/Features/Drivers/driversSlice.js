@@ -11,7 +11,6 @@ export const fetchDrivers = createAsyncThunk(
       const drivers = response.data || response.drivers || response || [];
 
       if (!Array.isArray(drivers)) {
-        console.warn("Drivers data is not an array:", response);
         return [];
       }
 

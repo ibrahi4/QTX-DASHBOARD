@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import PropTypes from "prop-types";
 import {
   LineChart,
   Line,
@@ -22,7 +21,7 @@ const LineChartsReports = () => {
   const { t } = useTranslation();
 
   const [chartData, setChartData] = useState([]);
-  const [totalTrips, setTotalTrips] = useState(0);
+  const [totalRevenue, setTotalRevenue] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -32,58 +31,69 @@ const LineChartsReports = () => {
         setLoading(true);
         setError(null);
 
-        const res = await getRevenueAnalysis(); // http://.../admin/stats/charts/rides
+        const res = await getRevenueAnalysis();
         const apiData = res.data || [];
 
         let total = 0;
 
         // تحويل البيانات من الـ API إلى شكل مناسب للـ Line Chart
         const formattedData = apiData.map((item) => {
-          const day = item._id.day;
-          const monthYear = `${item._id.year}-${item._id.month
-            .toString()
-            .padStart(2, "0")}`;
-          const dateObj = new Date(
-            monthYear + "-" + day.toString().padStart(2, "0")
-          );
+          // حماية من undefined في _id أو sub-fields
+          const day = item._id?.day || 1;
+          const month = item._id?.month || 1;
+          const year = item._id?.year || new Date().getFullYear();
+
+          const dateObj = new Date(year, month - 1, day); // month هو 1-based
 
           const formattedName = dateObj.toLocaleDateString("ar-EG", {
             day: "numeric",
             month: "long",
           });
 
-          total += item.count;
+          const revenueValue =
+            item.revenue || item.totalRevenue || item.amount || 0;
+          total += revenueValue;
 
           return {
-            name: formattedName, // مثل: "4 يناير"، "5 يناير"
-            trips: item.count,
+            name: formattedName,
+            revenue: revenueValue,
           };
         });
 
-        // ترتيب حسب التاريخ (من الأقدم للأحدث)
+        // ترتيب حسب التاريخ من الأقدم للأحدث
         formattedData.sort((a, b) => {
-          const dateA = new Date(a.name.replace(" يناير", "/01/2026"));
-          const dateB = new Date(b.name.replace(" يناير", "/01/2026"));
+          const dateA = new Date(
+            a.name.replace(
+              / \w+/,
+              `/${new Date().getMonth() + 1}/${new Date().getFullYear()}`
+            )
+          );
+          const dateB = new Date(
+            b.name.replace(
+              / \w+/,
+              `/${new Date().getMonth() + 1}/${new Date().getFullYear()}`
+            )
+          );
           return dateA - dateB;
         });
 
         setChartData(formattedData);
-        setTotalTrips(total);
+        setTotalRevenue(total);
       } catch (err) {
         console.error("Failed to load revenue data:", err);
         setError(t("failedToLoad") || "Failed to load revenue data");
         toast.error(t("failedToLoad") || "Failed to load revenue data");
 
-        // fallback إلى بيانات استاتيكية أصلية في حالة الفشل
+        // fallback إلى بيانات استاتيكية في حالة الفشل
         setChartData([
-          { name: "سبتمبر", trips: 140 },
-          { name: "أكتوبر", trips: 130 },
-          { name: "نوفمبر", trips: 100 },
-          { name: "ديسمبر", trips: 120 },
-          { name: "يناير", trips: 210 },
-          { name: "فبراير", trips: 240 },
+          { name: "سبتمبر", revenue: 140000 },
+          { name: "أكتوبر", revenue: 130000 },
+          { name: "نوفمبر", revenue: 100000 },
+          { name: "ديسمبر", revenue: 120000 },
+          { name: "يناير", revenue: 210000 },
+          { name: "فبراير", revenue: 240000 },
         ]);
-        setTotalTrips(940);
+        setTotalRevenue(940000);
       } finally {
         setLoading(false);
       }
@@ -96,16 +106,11 @@ const LineChartsReports = () => {
     if (active && payload && payload.length) {
       return (
         <div className="px-3 py-2 text-sm text-white bg-blue-500 rounded-md shadow-lg">
-          {`${payload[0].value.toLocaleString()} ${t("journey")}`}
+          {`${payload[0].value.toLocaleString()} ${t("currency") || "ر.س"}`}
         </div>
       );
     }
     return null;
-  };
-
-  CustomTooltip.propTypes = {
-    active: PropTypes.bool,
-    payload: PropTypes.arrayOf(PropTypes.object),
   };
 
   if (loading) {
@@ -136,9 +141,9 @@ const LineChartsReports = () => {
             {t("revenueAnalysis")}
           </h2>
           <p className="text-[#A3ED0] flex items-center gap-2 mt-2">
-            {t("Total Journeys This Period")}
+            {t("totalRevenueThisPeriod") || "إجمالي الإيرادات في هذه الفترة"}
             <span className="text-[#11A849] font-bold">
-              {totalTrips.toLocaleString()}
+              {totalRevenue.toLocaleString()} {t("currency") || "ر.س"}
             </span>
             <img src={icon} alt="growth" className="w-5 h-5" />
           </p>
@@ -169,7 +174,7 @@ const LineChartsReports = () => {
           <Tooltip content={<CustomTooltip />} />
           <Line
             type="monotone"
-            dataKey="trips"
+            dataKey="revenue"
             stroke="#3b82f6"
             strokeWidth={3}
             dot={{ r: 6, fill: "#3b82f6" }}

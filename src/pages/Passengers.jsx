@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react";
 import { ResponsiveDialog } from "@/components/shared/ResponsiveDialog";
 import { Button } from "@/components/ui/button";
-import { LuCircleFadingPlus } from "react-icons/lu";
 import { Controller, useForm } from "react-hook-form";
 import { Form, FormItem } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -167,7 +166,7 @@ const Passengers = () => {
     t("email"),
     t("phone"),
     t("joinDate"),
-    t("registeredCity"),
+
     t("activation"),
     t("actions"),
   ];
@@ -188,15 +187,6 @@ const Passengers = () => {
           <h1 className="text-2xl font-medium text-[#222222] dark:text-white">
             {t("passengerList")}
           </h1>
-          <div>
-            <Button
-              onClick={() => setOpenModal(true)}
-              className="flex min-h-[40px] items-center gap-2 text-white"
-            >
-              <LuCircleFadingPlus />
-              <span>{t("addPassenger")}</span>
-            </Button>
-          </div>
         </div>
 
         <div className="flex items-center justify-between">
@@ -308,9 +298,6 @@ const Passengers = () => {
                     {item.createdAt
                       ? new Date(item.createdAt).toLocaleDateString("ar-EG")
                       : item.date || "-"}
-                  </TableCell>
-                  <TableCell className="text-primary-1">
-                    {item.city || "-"}
                   </TableCell>
 
                   <TableCell>

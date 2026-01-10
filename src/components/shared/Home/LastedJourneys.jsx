@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { CiSearch } from "react-icons/ci";
@@ -5,8 +6,8 @@ import { TableCell, TableRow } from "@/components/ui/table";
 import ArabicTable from "@/components/ArabicTable";
 import Loading from "@/components/feedback/Loading";
 import LottieHandler from "@/components/feedback/lottieHandler/LottieHandler";
-import { Controller, useForm } from "react-hook-form";
-import { FormItem } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+
 import DateInput from "@/components/ui/dateInput";
 import {
   Select,
@@ -15,9 +16,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-hot-toast";
-import { getLatestJourneys } from "@/services/adminService";
+import {
+  getAllRides,
+  acceptJourney,
+  rejectJourney,
+} from "@/services/adminService";
 
 const LastedJourneys = () => {
   const { t } = useTranslation();
@@ -26,33 +32,47 @@ const LastedJourneys = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // فلاتر محلية (بحث + حالة + تاريخ)
+  const [searchValue, setSearchValue] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("");
+  const [selectedDate, setSelectedDate] = useState(null);
+
   const { control } = useForm();
 
   useEffect(() => {
     const fetchJourneys = async () => {
       try {
         setLoading(true);
-        const res = await getLatestJourneys(); // استدعاء الـ API
-        const data = res.data?.journeys || res.data || res || [];
-        console.log("Fetched latest journeys:", data);
+        setError(null);
 
-        const mappedJourneys = data.map((item) => ({
-          id: item._id || item.id,
-          img: item.driver?.profileImg || "/assets/driver.png",
-          name: item.driver?.fullName || t("notSpecified"),
-          cost: item.fare ? `${item.fare} ر.س` : "-",
-          date: item.createdAt
-            ? new Date(item.createdAt).toLocaleDateString("ar-EG")
+        const res = await getAllRides(); // جلب كل الرحلات أو الأحدث
+        const data = res.data?.rides || res.data || [];
+
+        const mapped = data.map((ride) => ({
+          id: ride._id,
+          img: ride.driver?.profileImg || "/assets/driver.png",
+          name: ride.driver?.fullName || t("notAssigned"),
+          cost: ride.fare ? `${ride.fare} ر.س` : "-",
+          date: ride.createdAt
+            ? new Date(ride.createdAt).toLocaleDateString("ar-EG", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })
             : "-",
-          status: item.status || "pending",
+          status: ride.status || "pending",
+          departure: ride.departure || "-",
+          dropoff: ride.dropoffLocation?.address || "-",
+          distance: ride.distance || 0,
+          duration: ride.duration || 0,
         }));
 
-        setJourneys(mappedJourneys);
+        setJourneys(mapped);
       } catch (err) {
-        console.error("Failed to load latest journeys:", err);
-        setError(t("failedToLoad") || "Failed to load latest journeys");
-        toast.error(t("failedToLoad") || "Failed to load latest journeys");
-        setJourneys([]); // لا بيانات استاتيكية
+        console.error("Failed to load journeys:", err);
+        setError(t("failedToLoad") || "فشل تحميل الرحلات");
+        toast.error(t("failedToLoad") || "فشل تحميل الرحلات");
+        setJourneys([]);
       } finally {
         setLoading(false);
       }
@@ -61,11 +81,65 @@ const LastedJourneys = () => {
     fetchJourneys();
   }, [t]);
 
+  // قبول الرحلة
+  const handleAccept = async (journeyId) => {
+    try {
+      await acceptJourney(journeyId);
+      toast.success(t("journeyAccepted") || "تم قبول الرحلة بنجاح");
+
+      // تحديث الحالة محليًا
+      setJourneys((prev) =>
+        prev.map((j) => (j.id === journeyId ? { ...j, status: "accepted" } : j))
+      );
+    } catch (err) {
+      toast.error(t("acceptFailed") || "فشل في قبول الرحلة");
+    }
+  };
+
+  // رفض الرحلة
+  const handleReject = async (journeyId) => {
+    try {
+      await rejectJourney(journeyId);
+      toast.success(t("journeyRejected") || "تم رفض الرحلة بنجاح");
+
+      // تحديث الحالة محليًا
+      setJourneys((prev) =>
+        prev.map((j) => (j.id === journeyId ? { ...j, status: "rejected" } : j))
+      );
+    } catch (err) {
+      toast.error(t("rejectFailed") || "فشل في رفض الرحلة");
+    }
+  };
+
+  // فلترة الرحلات (بحث + حالة + تاريخ)
+  const filteredJourneys = journeys.filter((j) => {
+    const matchesSearch =
+      searchValue === "" ||
+      j.name?.toLowerCase().includes(searchValue.toLowerCase()) ||
+      j.cost?.includes(searchValue) ||
+      j.departure?.toLowerCase().includes(searchValue.toLowerCase()) ||
+      j.dropoff?.toLowerCase().includes(searchValue.toLowerCase());
+
+    const matchesStatus = selectedStatus === "" || j.status === selectedStatus;
+
+    const matchesDate =
+      !selectedDate ||
+      j.date ===
+        new Date(selectedDate).toLocaleDateString("ar-EG", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+
+    return matchesSearch && matchesStatus && matchesDate;
+  });
+
   const headData = [
     t("drivers"),
     t("journeyCost"),
     t("date"),
     t("journeyStatus"),
+    t("actions"),
   ];
 
   return (
@@ -76,60 +150,46 @@ const LastedJourneys = () => {
             {t("latestJourneys")}
           </h2>
           <div className="flex flex-wrap flex-1 gap-8 sm:flex-nowrap">
-            <Controller
-              name="search"
-              control={control}
-              render={({ field }) => (
-                <FormItem className="relative flex items-center flex-1">
-                  <Input
-                    {...field}
-                    className="px-[28px] dark:bg-gray-800 dark:text-white placeholder:dark:text-gray-400 min-h-[40px] rounded-full border-none bg-[#F9F9F9] text-black py-2 focus:outline-none focus:ring-1 focus:ring-primary-1 placeholder:text-[#888888]"
-                    placeholder={t("searchForJourney")}
-                  />
-                  <CiSearch
-                    size={20}
-                    className="absolute right-2 !m-0 text-[#888888] dark:text-white"
-                  />
-                </FormItem>
-              )}
-            />
+            <div className="relative flex items-center flex-1">
+              <Input
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+                className="px-[28px] dark:bg-gray-800 dark:text-white placeholder:dark:text-gray-400 min-h-[40px] rounded-full border-none bg-[#F9F9F9] text-black py-2 focus:outline-none focus:ring-1 focus:ring-primary-1 placeholder:text-[#888888]"
+                placeholder={t("searchForJourney")}
+              />
+              <CiSearch
+                size={20}
+                className="absolute right-2 text-[#888888] dark:text-white"
+              />
+            </div>
 
-            <Controller
-              name="date"
-              control={control}
-              render={({ field }) => (
-                <FormItem className="relative flex items-center">
-                  <DateInput
-                    value={field.value || null}
-                    onChange={field.onChange}
-                    className="px-[28px] min-h-[40px] rounded-full border-none bg-[#F9F9F9] text-black dark:text-white py-2 focus:outline-none focus:ring-1 focus:ring-primary-1 placeholder:text-[#888888]"
-                    placeholder={t("date")}
-                  />
-                </FormItem>
-              )}
-            />
+            <div className="relative flex items-center">
+              <DateInput
+                value={selectedDate}
+                onChange={setSelectedDate}
+                className="px-[28px] min-h-[40px] rounded-full border-none bg-[#F9F9F9] text-black dark:text-white py-2 focus:outline-none focus:ring-1 focus:ring-primary-1 placeholder:text-[#888888]"
+                placeholder={t("date")}
+              />
+            </div>
 
-            <Controller
-              name="status"
-              control={control}
-              render={({ field }) => (
-                <FormItem className="relative flex items-center">
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <SelectTrigger className="rounded-[5px] dark:text-white bg-[#F9F9F9] dark:bg-gray-800">
-                      <SelectValue placeholder={t("journeyStatus")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="accepted">{t("accepted")}</SelectItem>
-                      <SelectItem value="rejected">{t("rejected")}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )}
-            />
+            <div className="relative flex items-center">
+              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                <SelectTrigger className="rounded-[5px] dark:text-white bg-[#F9F9F9] dark:bg-gray-800">
+                  <SelectValue placeholder={t("journeyStatus")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">{t("pending")}</SelectItem>
+                  <SelectItem value="accepted">{t("accepted")}</SelectItem>
+                  <SelectItem value="rejected">{t("rejected")}</SelectItem>
+                  <SelectItem value="completed">{t("completed")}</SelectItem>
+                  <SelectItem value="cancelled">{t("cancelled")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </form>
 
-        <div className="overflow-hidden">
+        <div className="overflow-hidden mt-6">
           <ArabicTable headData={headData}>
             {loading ? (
               <Loading type="table" status={true} td={headData.length} tr={8} />
@@ -142,8 +202,8 @@ const LastedJourneys = () => {
                   {error}
                 </TableCell>
               </TableRow>
-            ) : journeys.length > 0 ? (
-              journeys.map((item) => (
+            ) : filteredJourneys.length > 0 ? (
+              filteredJourneys.map((item) => (
                 <TableRow
                   key={item.id}
                   className="text-center border-none hover:dark:bg-gray-800"
@@ -160,22 +220,47 @@ const LastedJourneys = () => {
                   <TableCell>{item.date}</TableCell>
                   <TableCell>
                     <span
-                      className={`bg-[#E6F4EF] px-8 py-2 text-[#11A849] rounded-lg font-medium ${
-                        item.status === "rejected"
+                      className={`px-8 py-2 rounded-lg font-medium ${
+                        item.status === "accepted" ||
+                        item.status === "completed"
+                          ? "bg-[#E6F4EF] text-[#11A849]"
+                          : item.status === "rejected" ||
+                            item.status === "cancelled"
                           ? "bg-red-100 text-red-600"
-                          : ""
+                          : "bg-yellow-100 text-yellow-800"
                       }`}
                     >
                       {item.status === "accepted"
                         ? t("accepted")
                         : item.status === "rejected"
                         ? t("rejected")
+                        : item.status === "completed"
+                        ? t("completed")
+                        : item.status === "cancelled"
+                        ? t("cancelled")
                         : t("pending")}
                     </span>
                   </TableCell>
 
                   <TableCell>
-                    {/* Actions column left empty as in original */}
+                    {item.status === "pending" && (
+                      <div className="flex items-center justify-center gap-3">
+                        <Button
+                          size="sm"
+                          className="bg-[#11A849] hover:bg-green-700 text-white"
+                          onClick={() => handleAccept(item.id)}
+                        >
+                          {t("accept")}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleReject(item.id)}
+                        >
+                          {t("reject")}
+                        </Button>
+                      </div>
+                    )}
                   </TableCell>
                 </TableRow>
               ))
