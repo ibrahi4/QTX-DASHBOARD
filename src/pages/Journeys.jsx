@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { ResponsiveDialog } from "@/components/shared/ResponsiveDialog";
 import { Button } from "@/components/ui/button";
-import { LuCircleFadingPlus } from "react-icons/lu";
 import { Controller, useForm } from "react-hook-form";
 import { Form, FormItem } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";

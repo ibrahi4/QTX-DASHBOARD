@@ -6,22 +6,30 @@ import StatictCarts from "@/components/shared/Home/StatictCarts";
 
 function Home() {
   return (
-    <div className="container py-8 space-y-8">
+    <div className="w-full px-4 sm:px-6 lg:px-8 py-6 md:py-8 space-y-6 md:space-y-6 rounded-3xl">
+      {/* Cards Profit - Full width */}
       <CardsProfit />
-      <div className="grid grid-cols-1 gap-8 xl:grid-cols-2">
-        <div className="rounded-[20px] bg-white dark:bg-gray-900 shadow-main">
+
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 gap-6 md:gap-8 lg:grid-cols-2 w-full">
+        <div className="w-full h-full rounded-3xl bg-white dark:bg-gray-900 shadow-main min-h-[280px] md:min-h-[360px]">
           <StatictCarts />
         </div>
-        <div className="rounded-[20px] bg-white dark:bg-gray-900 shadow-main">
-          <LineCarts />
+
+        {/* OffJourney */}
+        <div className="w-full h-full rounded-2xl bg-white dark:bg-gray-900 shadow-main min-h-[360px] md:min-h-[420px]">
+          <OffJourney />
         </div>
       </div>
-      <div className="flex flex-wrap gap-8 xl:flex-nowrap">
-        <div className="rounded-[20px] max-w-[100%] bg-white shadow-main dark:bg-gray-900 flex-1">
-          <LastedJourneys />
+
+      {/* Bottom Section */}
+      <div className="grid grid-cols-1 gap-6 md:gap-8 lg:grid-cols-1 w-full">
+        <div className="w-full h-full rounded-2xl bg-white dark:bg-gray-900 shadow-main min-h-[280px] md:min-h-[360px]">
+          <LineCarts />
         </div>
-        <div className="rounded-[20px] w-full xl:w-auto xl:min-w-[500px] bg-white dark:bg-gray-900 shadow-main ">
-          <OffJourney />
+        {/* LastedJourneys */}
+        <div className="lg:col-span-1 w-full h-full rounded-2xl bg-white dark:bg-gray-900 shadow-main min-h-[360px] md:min-h-[420px]">
+          <LastedJourneys />
         </div>
       </div>
     </div>

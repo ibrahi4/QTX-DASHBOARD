@@ -73,7 +73,7 @@ export const rejectDriver = async (id, reason = "") => {
 
 /* ==================== Passengers / Users Management ==================== */
 export const getAllPassengers = async (params = {}) => {
-  const res = await api.get("/admin/users", {
+  const res = await api.get("/admin/users?role=driver", {
     params: { role: "user", ...params },
   });
   return res.data;

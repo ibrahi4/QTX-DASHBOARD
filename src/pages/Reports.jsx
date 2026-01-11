@@ -1,4 +1,4 @@
-import BieCartsReport from "@/components/shared/Reports/BieCartsReport";
+// import BieCartsReport from "@/components/shared/Reports/BieCartsReport";
 import CardReport from "@/components/shared/Reports/CardReport";
 import LineChartsReports from "@/components/shared/Reports/LineChartsReports";
 import TopDriver from "@/components/shared/Reports/TopDriver";
@@ -12,14 +12,8 @@ const Reports = () => {
         <div className="lg:col-span-2">
           <LineChartsReports />
         </div>
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:col-span-2">
-          <div>
-            <BieCartsReport />
-          </div>
-
-          <div>
-            <TopDriver />
-          </div>
+        <div className="lg:col-span-2">
+          <TopDriver />
         </div>
       </div>
     </div>

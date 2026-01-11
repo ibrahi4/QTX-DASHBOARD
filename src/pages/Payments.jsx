@@ -4,13 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Controller, useForm } from "react-hook-form";
 import { Form, FormItem } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { CiSearch } from "react-icons/ci";
 import { TableCell, TableRow } from "@/components/ui/table";
 import ArabicTable from "@/components/ArabicTable";

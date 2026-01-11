@@ -206,18 +206,6 @@ const Passengers = () => {
             </div>
 
             <div>
-              <Select>
-                <SelectTrigger className="w-[150px] focus:border-[#C9CDF6] dark:bg-gray-900 focus:ring-0">
-                  <SelectValue placeholder={t("allUsers")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="cairo">Cairo</SelectItem>
-                  <SelectItem value="alex">Alexandria</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
               <Controller
                 name="join"
                 control={control}

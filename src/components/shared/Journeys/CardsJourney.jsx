@@ -25,10 +25,10 @@ const CardsJourney = () => {
       try {
         const res = await getRidesStats(); // /admin/stats/rides
         const data = res.data || {};
-
+        console.log("Fetched journey stats:", data);
         setStats({
-          reception: data.reception || data.pending || 0,
-          inProgress: data.inProgress || data.ongoing || 0,
+          reception: data.pending || 0,
+          inProgress: data.started || 0,
           completed: data.completed || 0,
           cancelled: data.cancelled || 0,
         });
