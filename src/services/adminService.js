@@ -1,7 +1,7 @@
 // src/services/adminService.js
 import axios from "axios";
 
-const BASE_URL = "https://213.210.20.206:9000/api/v1";
+const BASE_URL = "http://213.210.20.206:9000/api/v1";
 
 // إنشاء instance لـ axios
 const api = axios.create({
